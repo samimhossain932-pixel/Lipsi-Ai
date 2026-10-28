@@ -89,38 +89,57 @@ function addMessage(who, text) {
     document.getElementById("messages").scrollHeight;
 }
 
-function sendMessage() {
+async function sendMessage() {
   const input = document.getElementById("question");
   const q = input.value.trim();
+
   if (!q) return;
 
   addMessage("You", q);
   input.value = "";
 
-  const text = q.toLowerCase();
-  let answer;
+  try {
+    addMessage("Lipsi", "Thinking...");
 
-  if (text.includes("hello") || text.includes("hi")) {
-    answer = "Hello! 😊 I'm Lipsi. What would you like to do today?";
-  } else if (text.includes("your name")) {
-    answer = "My name is Lipsi, your personal assistant!";
-  } else if (text.includes("time")) {
-    answer = "The time on your phone is " +
-      new Date().toLocaleTimeString() + ".";
-  } else if (text.includes("date")) {
-    answer = "Today's date is " +
-      new Date().toLocaleDateString() + ".";
-  } else if (text.includes("my name")) {
-    answer = "Your saved name is " +
-      (localStorage.getItem("lipsiName") || "not set yet") + ".";
-  } else {
-    answer = "I received your message! My basic version works, " +
-      "but real AI answers require connecting an AI model. " +
-      "We'll work on that next.";
+    const response = await fetch(BACKEND_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify({
+        question: q
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Server error: " + response.status);
+    }
+
+    const data = await response.json();
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    const answer = data.reply || data.answer;
+
+    if (!answer) {
+      throw new Error("No answer received from Gemini.");
+    }
+
+    lastAnswer = answer;
+    addMessage("Lipsi", answer);
+
+  } catch (error) {
+    console.error("Lipsi error:", error);
+
+    const message = "Sorry, I couldn't connect to my AI. " +
+      "Please check the backend URL and deployment settings.";
+
+    lastAnswer = message;
+    addMessage("Lipsi", message);
+
   }
-
-  lastAnswer = answer;
-  addMessage("Lipsi", answer);
 }
 
 function listen() {
