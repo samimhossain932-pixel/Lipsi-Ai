@@ -99,7 +99,12 @@ async function sendMessage() {
   input.value = "";
 
   try {
-    addMessage("Lipsi", "Thinking...");
+    addMessage("  const messages = document.getElementById("messages");
+  const thinking = document.createElement("p");
+  thinking.textContent = "Lipsi: Thinking...";
+  messages.appendChild(thinking);
+
+  try {");
 
     const response = await fetch(BACKEND_URL, {
       method: "POST",
